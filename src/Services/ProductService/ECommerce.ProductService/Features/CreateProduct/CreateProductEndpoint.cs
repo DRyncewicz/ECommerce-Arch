@@ -1,3 +1,4 @@
+using ECommerce.ProductService.Domain;
 using ECommerce.SharedKernel.CQRS;
 using ECommerce.SharedKernel.Endpoints;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,17 @@ internal sealed class CreateProductEndpoint(ICommandDispatcher dispatcher) : IEn
     {
         app.MapPost("/api/products", async ([FromBody] CreateProductRequest request, CancellationToken ct) =>
         {
-            var command = new CreateProductCommand(request.Name, request.Description, request.BasePrice, request.CategoryId);
+            var attributes = request.Attributes?
+                .Select(a => new ProductAttribute(a.Key, a.Value, a.Unit))
+                .ToList() ?? [];
+
+            var command = new CreateProductCommand(
+                request.Name,
+                request.Description,
+                request.BasePrice,
+                request.CategoryId,
+                attributes);
+
             var result = await dispatcher.SendAsync(command, ct);
 
             return result.IsSuccess

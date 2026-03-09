@@ -18,7 +18,7 @@ public class CreateProductHandlerTests
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsSuccessWithId()
     {
-        var command = new CreateProductCommand("Test Product", "A description", 9.99m, "cat-1");
+        var command = new CreateProductCommand("Test Product", "A description", 9.99m, "cat-1", []);
 
         var result = await _sut.HandleAsync(command);
 
@@ -32,7 +32,7 @@ public class CreateProductHandlerTests
     [Fact]
     public async Task HandleAsync_CreatesProductWithCorrectProperties()
     {
-        var command = new CreateProductCommand("Widget", "A widget", 19.99m, "widgets");
+        var command = new CreateProductCommand("Widget", "A widget", 19.99m, "widgets", []);
 
         var result = await _sut.HandleAsync(command);
 

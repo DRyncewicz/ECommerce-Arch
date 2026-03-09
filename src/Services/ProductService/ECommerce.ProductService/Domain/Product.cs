@@ -10,10 +10,17 @@ public sealed class Product : AggregateRoot<Guid>
     public string CategoryId { get; private set; } = string.Empty;
     public bool IsActive { get; private set; }
     public List<ProductVariant> Variants { get; private set; } = [];
+    public List<ProductAttribute> Attributes { get; private set; } = [];
 
     private Product() { }
 
-    public static Product Create(Guid id, string name, string description, decimal basePrice, string categoryId)
+    public static Product Create(
+        Guid id,
+        string name,
+        string description,
+        decimal basePrice,
+        string categoryId,
+        IEnumerable<ProductAttribute>? attributes = null)
     {
         var product = new Product
         {
@@ -22,7 +29,8 @@ public sealed class Product : AggregateRoot<Guid>
             Description = description,
             BasePrice = basePrice,
             CategoryId = categoryId,
-            IsActive = true
+            IsActive = true,
+            Attributes = attributes?.ToList() ?? []
         };
         product.RaiseDomainEvent(new ProductCreatedDomainEvent(id, name, categoryId, basePrice));
         return product;

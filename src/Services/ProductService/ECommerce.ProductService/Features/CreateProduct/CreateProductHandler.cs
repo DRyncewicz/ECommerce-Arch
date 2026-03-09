@@ -15,7 +15,8 @@ internal sealed class CreateProductHandler(IProductRepository repository)
             command.Name,
             command.Description,
             command.BasePrice,
-            command.CategoryId);
+            command.CategoryId,
+            command.Attributes);
 
         await repository.AddAsync(product, ct);
         return Result.Success(product.Id);
