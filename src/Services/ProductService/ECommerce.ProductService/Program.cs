@@ -1,11 +1,12 @@
 using ECommerce.ProductService;
 using ECommerce.SharedKernel.Endpoints;
+using ECommerce.SharedKernel.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddObservability("product-service");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddProductServices(builder.Configuration);
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
@@ -18,6 +19,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapObservability();
 app.MapEndpoints();
 
 app.Run();

@@ -35,6 +35,24 @@ services:
     ports:
       - "8091:8081"    # http://localhost:8091
 
+  seq:
+    ports:
+      - "5341:5341"    # ingestion (OTLP/HTTP logs from services)
+      - "5342:80"      # http://localhost:5342  ← Seq UI
+
+  jaeger:
+    ports:
+      - "16686:16686"  # http://localhost:16686 ← Jaeger UI
+      - "4317:4317"    # OTLP gRPC (traces from services)
+
+  prometheus:
+    ports:
+      - "9090:9090"    # http://localhost:9090  ← Prometheus UI
+
+  grafana:
+    ports:
+      - "3000:3000"    # http://localhost:3000  ← Grafana UI (metrics dashboards)
+
   # ── Service ports + Development environment ──────────────────────────────────
 
   gateway:

@@ -123,6 +123,49 @@ services:
       mongo:
         condition: service_healthy
 
+  # ── Observability (--profile tools) ─────────────────────────────────────────
+
+  seq:
+    profiles: ["tools", "all"]
+    image: datalust/seq:2024
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      - seq-data:/data
+
+  jaeger:
+    profiles: ["tools", "all"]
+    image: jaegertracing/all-in-one:1.57
+    restart: unless-stopped
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  prometheus:
+    profiles: ["tools", "all"]
+    image: prom/prometheus:v2.51.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    profiles: ["tools", "all"]
+    image: grafana/grafana:10.4.0
+    restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
   # ── Microservices (--profile services) ──────────────────────────────────────
 
   gateway:
@@ -269,3 +312,6 @@ volumes:
   redis-data:
   kafka-data:
   es-data:
+  seq-data:
+  prometheus-data:
+  grafana-data:

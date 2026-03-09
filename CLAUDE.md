@@ -303,8 +303,13 @@ Gateway is also responsible for:
 | Redis                | 6379    |
 | Kafka                | 9092    |
 | Elasticsearch        | 9200    |
-| Kafka UI (`--profile tools`) | 8090 |
-| Mongo Express (`--profile tools`) | 8091 |
+| Kafka UI (`--profile tools`)      | 8090  |
+| Mongo Express (`--profile tools`) | 8091  |
+| Seq — log UI (`--profile tools`)  | 5342  |
+| Jaeger — trace UI (`--profile tools`) | 16686 |
+| Jaeger — OTLP gRPC ingestion      | 4317  |
+| Prometheus (`--profile tools`)    | 9090  |
+| Grafana — metrics UI (`--profile tools`) | 3000 |
 
 ---
 
@@ -356,11 +361,20 @@ Phase 5 — Growth Features
 | Log UI             | Kibana                        | `http://localhost:5601` |
 | Trace UI           | Jaeger                        | `http://localhost:16686`|
 
-Every service must include:
+Every service calls two methods from `ECommerce.SharedKernel.Observability`:
 ```csharp
-builder.Services.AddOpenTelemetry()
-    .WithTracing(b => b.AddAspNetCoreInstrumentation().AddJaegerExporter());
+// before Build()
+builder.AddObservability("service-name");  // Serilog + OTel tracing + metrics
+
+// after Build()
+app.MapObservability();  // exposes /metrics for Prometheus
 ```
+
+Config keys (defaults point to Docker service names; overridden in appsettings.Development.json to localhost):
+| Key | Docker default | Local dev (IDE) |
+|-----|---|---|
+| `Seq:ServerUrl` | `http://seq:5341` | `http://localhost:5341` |
+| `Otlp:Endpoint` | `http://jaeger:4317` | `http://localhost:4317` |
 
 ---
 

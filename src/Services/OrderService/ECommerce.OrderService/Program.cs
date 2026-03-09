@@ -1,8 +1,11 @@
 using ECommerce.SharedKernel.CQRS;
 using ECommerce.SharedKernel.Endpoints;
+using ECommerce.SharedKernel.Observability;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddObservability("order-service");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -31,6 +34,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapObservability();
 app.MapEndpoints();
 
 app.Run();

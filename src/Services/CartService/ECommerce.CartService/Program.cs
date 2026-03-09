@@ -1,7 +1,9 @@
 using ECommerce.SharedKernel.Endpoints;
+using ECommerce.SharedKernel.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddObservability("cart-service");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddEndpoints(typeof(Program).Assembly);
@@ -15,6 +17,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapObservability();
 app.MapEndpoints();
 app.Run();
 
