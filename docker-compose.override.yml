@@ -19,7 +19,8 @@ services:
 
   kafka:
     ports:
-      - "9092:9092"
+      - "9092:9092"    # internal Docker network (services in containers)
+      - "29092:29092"  # host access (IDE / local dev)
 
   elasticsearch:
     ports:

@@ -1,3 +1,4 @@
+using ECommerce.SearchService;
 using ECommerce.SharedKernel.Endpoints;
 using ECommerce.SharedKernel.Observability;
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddObservability("search-service");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSearchServices(builder.Configuration);
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 var app = builder.Build();

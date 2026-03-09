@@ -1,5 +1,6 @@
 using ECommerce.ProductService.Features.CreateProduct;
 using ECommerce.ProductService.Infrastructure.Persistence;
+using ECommerce.SharedKernel.Messaging;
 using FluentAssertions;
 using NSubstitute;
 
@@ -8,11 +9,12 @@ namespace ECommerce.ProductService.Tests.Features;
 public class CreateProductHandlerTests
 {
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
+    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
     private readonly CreateProductHandler _sut;
 
     public CreateProductHandlerTests()
     {
-        _sut = new CreateProductHandler(_repository);
+        _sut = new CreateProductHandler(_repository, _eventBus);
     }
 
     [Fact]
