@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="CLAUDE.md" />
+    <File Path="docker-compose.override.yml" />
+    <File Path="docker-compose.yml" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/ECommerce.Gateway/ECommerce.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/CartService/">
+    <Project Path="src/Services/CartService/ECommerce.CartService/ECommerce.CartService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/CustomerService/">
+    <Project Path="src/Services/CustomerService/ECommerce.CustomerService/ECommerce.CustomerService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/InventoryService/">
+    <Project Path="src/Services/InventoryService/ECommerce.InventoryService/ECommerce.InventoryService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/NotificationService/">
+    <Project Path="src/Services/NotificationService/ECommerce.NotificationService/ECommerce.NotificationService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/OrderService/">
+    <Project Path="src/Services/OrderService/ECommerce.OrderService/ECommerce.OrderService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/PaymentService/">
+    <Project Path="src/Services/PaymentService/ECommerce.PaymentService/ECommerce.PaymentService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/ProductService/">
+    <Project Path="src/Services/ProductService/ECommerce.ProductService/ECommerce.ProductService.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/SearchService/">
+    <Project Path="src/Services/SearchService/ECommerce.SearchService/ECommerce.SearchService.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/ECommerce.Contracts/ECommerce.Contracts.csproj" />
+    <Project Path="src/Shared/ECommerce.SharedKernel/ECommerce.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/OrderService/">
+    <Project Path="tests/OrderService/ECommerce.OrderService.Tests/ECommerce.OrderService.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/ProductService/">
+    <Project Path="tests/ProductService/ECommerce.ProductService.Tests/ECommerce.ProductService.Tests.csproj" />
+  </Folder>
+</Solution>

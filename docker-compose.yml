@@ -1,0 +1,271 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ECommerce Dev Stack
+#
+# Usage:
+#   docker compose up -d                        → infra only (recommended for local dev)
+#   docker compose --profile services up -d     → infra + all .NET microservices
+#   docker compose --profile tools up -d        → infra + dev tools (Kafka UI, Mongo Express)
+#   docker compose --profile all up -d          → everything
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: ecommerce
+
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  elasticsearch:
+    image: elasticsearch:8.13.0
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -qv '\"status\":\"red\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  # ── Dev Tools (--profile tools) ──────────────────────────────────────────────
+
+  kafka-ui:
+    profiles: ["tools", "all"]
+    image: provectuslabs/kafka-ui:latest
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  mongo-express:
+    profiles: ["tools", "all"]
+    image: mongo-express:1
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_URL: mongodb://root:root@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  # ── Microservices (--profile services) ──────────────────────────────────────
+
+  gateway:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Gateway/ECommerce.Gateway/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      product-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+      customer-service:
+        condition: service_started
+      cart-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
+      search-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+
+  product-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/ProductService/ECommerce.ProductService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__MongoDB=mongodb://root:root@mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  order-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/OrderService/ECommerce.OrderService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=orders_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  customer-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/CustomerService/ECommerce.CustomerService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=customers_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  cart-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/CartService/ECommerce.CartService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__Redis=redis:6379
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  payment-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/PaymentService/ECommerce.PaymentService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=payments_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  search-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/SearchService/ECommerce.SearchService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__Elasticsearch=http://elasticsearch:9200
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  notification-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/NotificationService/ECommerce.NotificationService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  inventory-service:
+    profiles: ["services", "all"]
+    build:
+      context: .
+      dockerfile: src/Services/InventoryService/ECommerce.InventoryService/Dockerfile
+    restart: unless-stopped
+    environment:
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=inventory_db;Username=postgres;Password=postgres
+      - Kafka__BootstrapServers=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  postgres-data:
+  redis-data:
+  kafka-data:
+  es-data:
