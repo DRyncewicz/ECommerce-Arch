@@ -14,26 +14,32 @@ public interface IQueryDispatcher
     Task<Result<TResult>> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken ct = default);
 }
 
-public sealed class Dispatcher(IServiceProvider services) : ICommandDispatcher, IQueryDispatcher
+public sealed class Dispatcher(IServiceScopeFactory scopeFactory) : ICommandDispatcher, IQueryDispatcher
 {
-    public Task<Result<TResult>> SendAsync<TResult>(ICommand<TResult> command, CancellationToken ct = default)
+    public async Task<Result<TResult>> SendAsync<TResult>(ICommand<TResult> command, CancellationToken ct = default)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
         var handlerType = typeof(ICommandHandler<,>).MakeGenericType(command.GetType(), typeof(TResult));
-        dynamic handler = services.GetRequiredService(handlerType);
-        return handler.HandleAsync((dynamic)command, ct);
+        var handler = scope.ServiceProvider.GetRequiredService(handlerType);
+        var method = handlerType.GetMethod(nameof(ICommandHandler<ICommand<TResult>, TResult>.HandleAsync))!;
+        return await (Task<Result<TResult>>)method.Invoke(handler, [command, ct])!;
     }
 
-    public Task<Result> SendAsync(ICommand command, CancellationToken ct = default)
+    public async Task<Result> SendAsync(ICommand command, CancellationToken ct = default)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
         var handlerType = typeof(ICommandHandler<>).MakeGenericType(command.GetType());
-        dynamic handler = services.GetRequiredService(handlerType);
-        return handler.HandleAsync((dynamic)command, ct);
+        var handler = scope.ServiceProvider.GetRequiredService(handlerType);
+        var method = handlerType.GetMethod(nameof(ICommandHandler<ICommand>.HandleAsync))!;
+        return await (Task<Result>)method.Invoke(handler, [command, ct])!;
     }
 
-    public Task<Result<TResult>> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken ct = default)
+    public async Task<Result<TResult>> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken ct = default)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
         var handlerType = typeof(IQueryHandler<,>).MakeGenericType(query.GetType(), typeof(TResult));
-        dynamic handler = services.GetRequiredService(handlerType);
-        return handler.HandleAsync((dynamic)query, ct);
+        var handler = scope.ServiceProvider.GetRequiredService(handlerType);
+        var method = handlerType.GetMethod(nameof(IQueryHandler<IQuery<TResult>, TResult>.HandleAsync))!;
+        return await (Task<Result<TResult>>)method.Invoke(handler, [query, ct])!;
     }
 }

@@ -3,6 +3,9 @@ using ECommerce.ProductService.Infrastructure.Persistence;
 using ECommerce.SharedKernel.CQRS;
 using ECommerce.SharedKernel.Messaging;
 using FluentValidation;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 
 namespace ECommerce.ProductService;
@@ -26,6 +29,9 @@ public static class ServiceExtensions
 
         // Validators
         services.AddValidatorsFromAssembly(typeof(ServiceExtensions).Assembly);
+
+        // MongoDB — register Guid serializer once (MongoDB.Driver 3.x defaults to Unspecified)
+        BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
         // MongoDB
         var connectionString = configuration.GetConnectionString("MongoDB")

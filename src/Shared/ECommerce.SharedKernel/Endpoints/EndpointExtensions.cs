@@ -9,7 +9,7 @@ public static class EndpointExtensions
 {
     public static IServiceCollection AddEndpoints(this IServiceCollection services, Assembly assembly)
     {
-        var endpointTypes = assembly.GetExportedTypes()
+        var endpointTypes = assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false }
                         && t.IsAssignableTo(typeof(IEndpoint)));
 

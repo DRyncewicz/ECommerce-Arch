@@ -1,3 +1,4 @@
+using ECommerce.SharedKernel.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,9 @@ public static class ObservabilityExtensions
         // ── Traces → Jaeger (OTLP) + Metrics → Prometheus ────────────────────
         var otlpEndpoint = builder.Configuration["Otlp:Endpoint"] ?? "http://jaeger:4317";
 
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
         builder.Services
             .AddOpenTelemetry()
             .ConfigureResource(r => r
@@ -57,6 +61,7 @@ public static class ObservabilityExtensions
     /// </summary>
     public static WebApplication MapObservability(this WebApplication app)
     {
+        app.UseExceptionHandler();
         app.MapPrometheusScrapingEndpoint("/metrics");
         return app;
     }

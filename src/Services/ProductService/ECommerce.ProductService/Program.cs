@@ -18,8 +18,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.MapObservability();
+app.UseHttpsRedirection();
 app.MapEndpoints();
 
 app.Run();
