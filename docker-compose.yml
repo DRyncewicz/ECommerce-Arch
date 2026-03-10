@@ -276,11 +276,14 @@ services:
     restart: unless-stopped
     environment:
       - ConnectionStrings__Elasticsearch=http://elasticsearch:9200
+      - ConnectionStrings__Redis=redis:6379
       - Kafka__BootstrapServers=kafka:9092
     depends_on:
       elasticsearch:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   notification-service:
