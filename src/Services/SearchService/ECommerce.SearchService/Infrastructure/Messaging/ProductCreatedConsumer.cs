@@ -1,13 +1,9 @@
-using System.Text.Json;
 using Confluent.Kafka;
 using ECommerce.Contracts;
 using ECommerce.Contracts.Products;
 using ECommerce.SearchService.Infrastructure.Persistence;
 using ECommerce.SearchService.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace ECommerce.SearchService.Infrastructure.Messaging;
 

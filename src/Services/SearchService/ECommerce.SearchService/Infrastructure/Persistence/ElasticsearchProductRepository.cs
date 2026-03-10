@@ -18,8 +18,11 @@ internal sealed class ElasticsearchProductRepository(
             .Id(document.Id.ToString()), ct);
 
         if (!response.IsValidResponse)
-            logger.LogError("Failed to index product {ProductId}: {Error}",
-                document.Id, response.ElasticsearchServerError?.Error?.Reason);
+        {
+            var reason = response.ElasticsearchServerError?.Error?.Reason ?? response.DebugInformation;
+            logger.LogError("Failed to index product {ProductId}: {Error}", document.Id, reason);
+            throw new InvalidOperationException($"Elasticsearch index failed: {reason}");
+        }
     }
 
     public async Task<(IReadOnlyList<ProductDocument> Hits, long Total)> SearchAsync(
@@ -54,7 +57,7 @@ internal sealed class ElasticsearchProductRepository(
         if (!response.IsValidResponse)
         {
             logger.LogError("Elasticsearch search failed: {Error}",
-                response.ElasticsearchServerError?.Error?.Reason);
+                response.ElasticsearchServerError?.Error?.Reason ?? response.DebugInformation);
             return ([], 0);
         }
 

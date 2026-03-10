@@ -83,7 +83,7 @@ services:
       start_period: 30s
 
   elasticsearch:
-    image: elasticsearch:8.13.0
+    image: elasticsearch:9.3.1
     restart: unless-stopped
     environment:
       - discovery.type=single-node

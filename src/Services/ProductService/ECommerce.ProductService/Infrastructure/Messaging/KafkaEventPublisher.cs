@@ -1,9 +1,7 @@
-using System.Text.Json;
 using Confluent.Kafka;
 using ECommerce.Contracts.Products;
 using ECommerce.SharedKernel.Messaging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace ECommerce.ProductService.Infrastructure.Messaging;
 
