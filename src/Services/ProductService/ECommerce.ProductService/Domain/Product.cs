@@ -11,6 +11,7 @@ public sealed class Product : AggregateRoot<Guid>
     public bool IsActive { get; private set; }
     public List<ProductVariant> Variants { get; private set; } = [];
     public List<ProductAttribute> Attributes { get; private set; } = [];
+    public List<OutboxEvent> OutboxEvents { get; private set; } = [];
 
     private Product() { }
 
@@ -45,6 +46,8 @@ public sealed class Product : AggregateRoot<Guid>
     }
 
     public void Deactivate() => IsActive = false;
+
+    public void AddOutboxEvent(OutboxEvent outboxEvent) => OutboxEvents.Add(outboxEvent);
 }
 
 public sealed record ProductCreatedDomainEvent(Guid ProductId, string Name, string CategoryId, decimal BasePrice)

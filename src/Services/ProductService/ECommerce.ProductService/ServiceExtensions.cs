@@ -1,4 +1,5 @@
 using ECommerce.ProductService.Infrastructure.Messaging;
+using ECommerce.ProductService.Infrastructure.Outbox;
 using ECommerce.ProductService.Infrastructure.Persistence;
 using ECommerce.SharedKernel.CQRS;
 using ECommerce.SharedKernel.Messaging;
@@ -40,8 +41,11 @@ public static class ServiceExtensions
         services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("products_db"));
         services.AddScoped<IProductRepository, MongoProductRepository>();
 
-        // Event bus
+        // Event bus (used by OutboxProcessor)
         services.AddSingleton<IEventBus, KafkaEventPublisher>();
+
+        // Outbox background processor
+        services.AddHostedService<OutboxProcessor>();
 
         return services;
     }

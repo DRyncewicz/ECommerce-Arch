@@ -9,4 +9,6 @@ public interface IProductRepository
     Task AddAsync(Product product, CancellationToken ct = default);
     Task UpdateAsync(Product product, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<Product>> GetWithPendingOutboxEventsAsync(CancellationToken ct = default);
+    Task RemoveOutboxEventAsync(Guid productId, Guid outboxEventId, CancellationToken ct = default);
 }

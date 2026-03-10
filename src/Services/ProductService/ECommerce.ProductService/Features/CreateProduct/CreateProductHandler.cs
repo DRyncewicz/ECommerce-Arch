@@ -1,13 +1,13 @@
+using System.Text.Json;
 using ECommerce.Contracts.Products;
 using ECommerce.ProductService.Domain;
 using ECommerce.ProductService.Infrastructure.Persistence;
 using ECommerce.SharedKernel.CQRS;
-using ECommerce.SharedKernel.Messaging;
 using ECommerce.SharedKernel.Results;
 
 namespace ECommerce.ProductService.Features.CreateProduct;
 
-internal sealed class CreateProductHandler(IProductRepository repository, IEventBus eventBus)
+internal sealed class CreateProductHandler(IProductRepository repository)
     : ICommandHandler<CreateProductCommand, Guid>
 {
     public async Task<Result<Guid>> HandleAsync(CreateProductCommand command, CancellationToken ct = default)
@@ -20,8 +20,6 @@ internal sealed class CreateProductHandler(IProductRepository repository, IEvent
             command.CategoryId,
             command.Attributes);
 
-        await repository.AddAsync(product, ct);
-
         var integrationEvent = new ProductCreatedEvent(
             product.Id,
             product.Name,
@@ -33,7 +31,16 @@ internal sealed class CreateProductHandler(IProductRepository repository, IEvent
                 .ToList(),
             DateTimeOffset.UtcNow);
 
-        await eventBus.PublishAsync(integrationEvent, ct);
+        product.AddOutboxEvent(new OutboxEvent
+        {
+            Id = Guid.NewGuid(),
+            EventType = nameof(ProductCreatedEvent),
+            Payload = JsonSerializer.Serialize(integrationEvent),
+            OccurredAt = DateTimeOffset.UtcNow
+        });
+
+        // Single atomic MongoDB insert: product + embedded outbox event
+        await repository.AddAsync(product, ct);
 
         return Result.Success(product.Id);
     }

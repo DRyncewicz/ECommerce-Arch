@@ -1,6 +1,5 @@
 using ECommerce.ProductService.Features.CreateProduct;
 using ECommerce.ProductService.Infrastructure.Persistence;
-using ECommerce.SharedKernel.Messaging;
 using FluentAssertions;
 using NSubstitute;
 
@@ -9,12 +8,11 @@ namespace ECommerce.ProductService.Tests.Features;
 public class CreateProductHandlerTests
 {
     private readonly IProductRepository _repository = Substitute.For<IProductRepository>();
-    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
     private readonly CreateProductHandler _sut;
 
     public CreateProductHandlerTests()
     {
-        _sut = new CreateProductHandler(_repository, _eventBus);
+        _sut = new CreateProductHandler(_repository);
     }
 
     [Fact]
@@ -27,7 +25,8 @@ public class CreateProductHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeEmpty();
         await _repository.Received(1).AddAsync(
-            Arg.Is<ECommerce.ProductService.Domain.Product>(p => p.Name == "Test Product"),
+            Arg.Is<ECommerce.ProductService.Domain.Product>(p =>
+                p.Name == "Test Product" && p.OutboxEvents.Count == 1),
             Arg.Any<CancellationToken>());
     }
 
